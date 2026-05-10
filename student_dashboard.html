@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard – HP Clubs{% endblock %}
+{% block content %}
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+  <div>
+    <div style="font-size:19px; font-weight:700;">Welcome, {{ user.name }}</div>
+    <div style="font-size:13px; color:var(--text2);">Student ID: {{ user.student_id }}</div>
+  </div>
+  <span class="pill pill-student">Student</span>
+</div>
+
+<div style="max-width:560px;">
+
+  <!-- Assigned club result -->
+  <div class="card">
+    <div class="card-title">My assigned club</div>
+
+    {% if settings.is_published %}
+      {% if assigned_club %}
+        <div class="result-box">
+          <span class="badge badge-ok">Assigned ✓</span>
+          <div class="result-club">{{ assigned_club.name }}</div>
+          <div class="result-sub">This is your confirmed Friday club.</div>
+        </div>
+      {% elif user.flagged %}
+        <div class="result-box">
+          <span class="badge badge-err">Review needed</span>
+          <div class="result-club">Both choices were full</div>
+          <div class="result-sub">Mrs. S will contact you to arrange placement.</div>
+        </div>
+      {% else %}
+        <div class="result-box">
+          <span class="badge badge-warn">No submission</span>
+          <div class="result-club">No choices on record</div>
+          <div class="result-sub">Please contact Mrs. S directly.</div>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="result-box">
+        <div style="font-size:28px; margin-bottom:10px;">🕐</div>
+        <div style="font-size:15px; font-weight:600; margin-bottom:5px;">Results not yet published</div>
+        <div style="font-size:13px; color:var(--text2);">The club list is still being finalized. Check back soon!</div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Sign-up form -->
+  {% if settings.signups_live and not settings.is_published %}
+    <div class="card">
+      <div class="card-title">Club sign-up</div>
+
+      {% if user.choice1 %}
+        <span class="badge badge-ok">Submitted ✓</span>
+        <div style="margin-top:10px; font-size:14px;">
+          <div style="margin-bottom:5px;"><strong>Choice 1:</strong> {{ c1.name if c1 else '—' }}</div>
+          <div><strong>Choice 2:</strong> {{ c2.name if c2 else '—' }}</div>
+        </div>
+      {% else %}
+        <form method="POST" action="{{ url_for('submit_choices') }}">
+          <div class="form-group">
+            <label for="choice1">First choice club</label>
+            <select id="choice1" name="choice1" required>
+              <option value="">Select a club…</option>
+              {% for club in clubs %}
+                <option value="{{ club.id }}" {% if club.current_cap >= club.max_cap %}disabled{% endif %}>
+                  {{ club.name }} ({{ club.current_cap }}/{{ club.max_cap }}{% if club.current_cap >= club.max_cap %} — FULL{% endif %})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="choice2">Second choice club</label>
+            <select id="choice2" name="choice2" required>
+              <option value="">Select a club…</option>
+              {% for club in clubs %}
+                <option value="{{ club.id }}" {% if club.current_cap >= club.max_cap %}disabled{% endif %}>
+                  {{ club.name }} ({{ club.current_cap }}/{{ club.max_cap }}{% if club.current_cap >= club.max_cap %} — FULL{% endif %})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn blue mt" type="submit">Submit choices</button>
+        </form>
+      {% endif %}
+    </div>
+  {% elif not settings.signups_live and not settings.is_published %}
+    <div class="card">
+      <div class="card-title">Club sign-up</div>
+      <p style="font-size:14px; color:var(--text2);">Sign-ups are not open yet. Check back soon!</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

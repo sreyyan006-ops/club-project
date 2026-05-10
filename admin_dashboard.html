@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard – HP Clubs{% endblock %}
+{% block content %}
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+  <div>
+    <div style="font-size:19px; font-weight:700;">Admin Dashboard</div>
+    <div style="font-size:13px; color:var(--text2);">Logged in as {{ session.user_name }}</div>
+  </div>
+  <span class="pill pill-admin">Admin</span>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  {% set total = students|length %}
+  <div class="stat-card"><div class="lbl">Students</div><div class="val">{{ total }}</div></div>
+  <div class="stat-card"><div class="lbl">Submitted</div><div class="val">{{ submitted }}</div></div>
+  <div class="stat-card"><div class="lbl">Assigned</div><div class="val">{{ assigned }}</div></div>
+  <div class="stat-card"><div class="lbl">Needs review</div><div class="val">{{ flagged }}</div></div>
+  <div class="stat-card">
+    <div class="lbl">Spots used</div>
+    <div class="val">{{ clubs|sum(attribute='current_cap') }}/{{ clubs|sum(attribute='max_cap') }}</div>
+  </div>
+</div>
+
+<div class="split">
+
+  <!-- Controls -->
+  <div>
+    <div class="section-title">Controls</div>
+    <div class="card">
+      <!-- Toggle sign-ups -->
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="tl">Sign-ups live</div>
+          <div class="ts">Allow students to submit choices</div>
+        </div>
+        <form method="POST" action="{{ url_for('toggle_signups') }}">
+          <button class="toggle-btn" type="submit">
+            <span class="toggle {% if settings.signups_live %}on{% endif %}"></span>
+          </button>
+        </form>
+      </div>
+      <!-- Toggle publish -->
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="tl">Results published</div>
+          <div class="ts">Students can view their assigned club</div>
+        </div>
+        <form method="POST" action="{{ url_for('toggle_publish') }}">
+          <button class="toggle-btn" type="submit">
+            <span class="toggle {% if settings.is_published %}on{% endif %}"></span>
+          </button>
+        </form>
+      </div>
+      <!-- Action buttons -->
+      <div class="flex-row mt">
+        <form method="POST" action="{{ url_for('smart_assign') }}">
+          <button class="btn green" type="submit">▶ Run smart assign</button>
+        </form>
+        <a class="btn" href="{{ url_for('export_csv') }}">↓ Export CSV</a>
+      </div>
+    </div>
+
+    <!-- Add club -->
+    <div class="section-title">Add a club</div>
+    <div class="card">
+      <form method="POST" action="{{ url_for('add_club') }}">
+        <div class="form-group">
+          <label>Club name</label>
+          <input name="name" type="text" placeholder="e.g. Chess Club" required />
+        </div>
+        <div class="form-group">
+          <label>Max capacity</label>
+          <input name="max_cap" type="number" value="30" min="1" max="200" required />
+        </div>
+        <button class="btn blue" type="submit">Add club</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Club capacity -->
+  <div>
+    <div class="section-title">Club capacity</div>
+    {% for club in clubs %}
+      {% set pct = ((club.current_cap / club.max_cap) * 100)|int if club.max_cap > 0 else 0 %}
+      {% if pct >= 100 %}{% set bar_color = 'var(--red)' %}
+      {% elif pct >= 80 %}{% set bar_color = 'var(--amber)' %}
+      {% else %}{% set bar_color = 'var(--blue)' %}{% endif %}
+      <div class="club-card" style="margin-bottom:8px;">
+        <div class="cname">
+          {{ club.name }}
+          <div style="display:flex; align-items:center; gap:6px;">
+            {% if pct >= 100 %}<span class="badge badge-err">Full</span>{% else %}<span class="badge badge-ok">Open</span>{% endif %}
+            <form method="POST" action="{{ url_for('delete_club', club_id=club.id) }}" style="display:inline;" onsubmit="return confirm('Delete {{ club.name }}?')">
+              <button type="submit" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text3);">✕</button>
+            </form>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar" style="width:{{ pct }}%; background:{{ bar_color }};"></div>
+        </div>
+        <div class="club-count">{{ club.current_cap }}/{{ club.max_cap }} students</div>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- Masterlist table -->
+<div class="section-title">Student masterlist</div>
+<div class="card tbl-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Student ID</th>
+        <th>Name</th>
+        <th>Choice 1</th>
+        <th>Choice 2</th>
+        <th>Assigned club</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+        {% set c1_name = s.choice1_club.name if s.choice1 else '—' %}
+        {% set c2_name = s.choice2_club.name if s.choice2 else '—' %}
+        {% set asgn_name = s.assigned_club.name if s.assigned else '—' %}
+        <tr>
+          <td>{{ s.student_id }}</td>
+          <td>{{ s.name }}</td>
+          <td>{{ c1_name }}</td>
+          <td>{{ c2_name }}</td>
+          <td>{{ asgn_name }}</td>
+          <td>
+            {% if s.flagged %}<span class="badge badge-err">Review needed</span>
+            {% elif s.assigned %}<span class="badge badge-ok">Assigned</span>
+            {% elif s.choice1 %}<span class="badge badge-info">Submitted</span>
+            {% else %}<span class="badge badge-gray">Pending</span>{% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" style="color:var(--text2); text-align:center;">No students yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

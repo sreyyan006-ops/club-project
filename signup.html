@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Sign up – HP Clubs{% endblock %}
+{% block content %}
+
+<div class="center-wrap" style="margin-top:2rem;">
+  <div class="card">
+    <div class="card-title">Create student account</div>
+    <form method="POST" action="{{ url_for('signup') }}">
+      <div class="form-group">
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text" placeholder="Your full name" required autofocus />
+      </div>
+      <div class="form-group">
+        <label for="student_id">Student ID (lunch number)</label>
+        <input id="student_id" name="student_id" type="text" placeholder="e.g. 10234" required />
+      </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" placeholder="Choose a username" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Choose a password" required />
+      </div>
+      <button class="btn blue wide mt" type="submit">Create account</button>
+    </form>
+    <p style="text-align:center; font-size:13px; color:var(--text2); margin-top:14px;">
+      Already have an account? <a href="{{ url_for('login') }}" style="color:var(--blue);">Log in</a>
+    </p>
+  </div>
+</div>
+
+{% endblock %}

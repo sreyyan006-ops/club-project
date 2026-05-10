@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}HP Clubs – Home{% endblock %}
+{% block content %}
+
+<div style="text-align:center; padding: 3.5rem 1rem 2.5rem;">
+  <h1 style="font-size:32px; font-weight:700; letter-spacing:-0.5px; margin-bottom:8px;">Friday Club Sign-Up</h1>
+  <p style="font-size:15px; color:var(--text2); margin-bottom:2rem;">Choose your clubs, get your assignment — all in one place.</p>
+  <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+    <a class="btn" href="{{ url_for('clubs') }}">View clubs</a>
+    {% if not session.user_id %}
+      <a class="btn blue" href="{{ url_for('signup') }}">Sign up</a>
+    {% elif session.user_role == 'student' %}
+      <a class="btn blue" href="{{ url_for('student_dashboard') }}">My dashboard</a>
+    {% else %}
+      <a class="btn blue" href="{{ url_for('admin_dashboard') }}">Admin dashboard</a>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; max-width:480px; margin:0 auto 2rem;">
+  <div class="card" style="text-align:center; margin-bottom:0;">
+    <div style="font-size:26px; font-weight:700; color:var(--blue);">{{ students }}</div>
+    <div style="font-size:11px; color:var(--text3); margin-top:2px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Students</div>
+  </div>
+  <div class="card" style="text-align:center; margin-bottom:0;">
+    <div style="font-size:26px; font-weight:700; color:var(--green);">{{ clubs|length }}</div>
+    <div style="font-size:11px; color:var(--text3); margin-top:2px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Active clubs</div>
+  </div>
+  <div class="card" style="text-align:center; margin-bottom:0;">
+    <div style="font-size:26px; font-weight:700; color:var(--amber);">{{ spots }}</div>
+    <div style="font-size:11px; color:var(--text3); margin-top:2px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Spots left</div>
+  </div>
+</div>
+
+{% endblock %}
